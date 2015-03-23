@@ -13,4 +13,4 @@ ADD index.html  /www/index.html
 EXPOSE 80
 
 ENTRYPOINT ["/consul-template"]
-CMD ["-consul", "consul.service.consul:8500", "-template", "/nginx.ctmpl:/etc/nginx/nginx.conf:service nginx status ||if service nginx status >/dev/null; then service nginx reload ; else service nginx start ; fi"]
+CMD ["-consul", "consul.service.consul:8500", "-template", "/nginx.ctmpl:/etc/nginx/nginx.conf:service nginx reload || service nginx restart"]
