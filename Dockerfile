@@ -7,6 +7,7 @@ ADD https://github.com/hashicorp/consul-template/releases/download/v0.7.0/consul
 RUN tar xzvf /consul-template_0.7.0_linux_amd64.tar.gz --strip-components=1 && rm /consul-template_0.7.0_linux_amd64.tar.gz
 
 ADD nginx.ctmpl /nginx.ctmpl
+ADD nginx.conf  /etc/nginx/nginx.conf
 ADD index.html  /www/index.html
 
 EXPOSE 80
