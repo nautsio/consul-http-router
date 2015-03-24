@@ -9,8 +9,10 @@ RUN tar xzvf /consul-template_0.7.0_linux_amd64.tar.gz --strip-components=1 && r
 ADD nginx.ctmpl /nginx.ctmpl
 ADD nginx.conf  /etc/nginx/nginx.conf
 ADD index.html  /www/index.html
+ADD reload.sh   /reload.sh
+RUN chmod +x /reload.sh
 
 EXPOSE 80
 
 ENTRYPOINT ["/consul-template"]
-CMD ["-consul", "consul.service.consul:8500", "-template", "/nginx.ctmpl:/etc/nginx/nginx.conf:service nginx reload || service nginx restart"]
+CMD ["-consul", "consul.service.consul:8500", "-template", "/nginx.ctmpl:/etc/nginx/nginx.conf:/reload.sh"]
