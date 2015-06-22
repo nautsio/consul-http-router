@@ -16,7 +16,8 @@ http {
     server {
 	listen 		80;
 	server_name 	{{$service.Name}}.*;
-
+	client_max_body_size 	0;
+	
 	location / {
 	    proxy_pass 		http://{{$service.Name}};
 	    proxy_set_header 	X-Forwarded-Host	$host;
