@@ -1,3 +1,4 @@
+#!/bin/sh
 if [ -f /var/run/nginx.pid ] ; then
 	PID=$(</var/run/nginx.pid) 
 fi

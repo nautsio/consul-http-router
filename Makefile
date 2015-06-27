@@ -1,7 +1,19 @@
 REPOSITORY=mvanholsteijn/consul-http-router
 TAG=$$(git rev-parse --short HEAD)
 
-build: target/consul-template target/nginx-bin
+build: target/consul-template 
+	@bin/create-stripped-image.sh  -i nginx -t mvanholsteijn/stripped-nginx \
+		-p nginx  \
+		-f /etc/passwd \
+		-f /etc/group \
+		-f '/lib/*/libnss*' \
+		-f /bin/ls \
+		-f /bin/cat \
+		-f /bin/sh \
+		-f /bin/mkdir \
+		-f /bin/ps \
+		-f /var/run \
+		-f /var/log/nginx 
 	docker build --no-cache -t $(REPOSITORY):$(TAG) -f src/Dockerfile . 
 	docker tag  -f $(REPOSITORY):$(TAG) $(REPOSITORY):latest
 	@echo build $(REPOSITORY):$(TAG)
@@ -16,10 +28,6 @@ target/consul-template:
 	@(cd target ; \
 	   curl -L https://github.com/hashicorp/consul-template/releases/download/v0.8.0/consul-template_0.8.0_linux_amd64.tar.gz  | \
 	   tar --strip-components=1 -xvzf - )
-
-target/nginx-bin: bin/build-stripped-nginx.sh
-	@mkdir -p target/nginx-bin
-	docker run -v $$PWD/target/nginx-bin:/export -v $$PWD/bin:/mybin nginx /mybin/build-stripped-nginx.sh
 
 clean:
 	rm -rf target
