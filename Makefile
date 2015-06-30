@@ -1,5 +1,6 @@
 REPOSITORY=mvanholsteijn/consul-http-router
 TAG=$$(git rev-parse --short HEAD)
+SYMBOLIC_TAG=$$(git tag --contains $$TAG)
 
 build: target/consul-template 
 	@bin/strip-docker-image  -i nginx -t mvanholsteijn/stripped-nginx \
@@ -17,11 +18,14 @@ build: target/consul-template
 		-f /var/cache/nginx
 	docker build --no-cache -t $(REPOSITORY):$(TAG) -f src/Dockerfile . 
 	docker tag  -f $(REPOSITORY):$(TAG) $(REPOSITORY):latest
+	@[ -n "$(SYMBOLIC_TAG)" ] || docker tag -f $(REPOSITORY):$(TAG) $(REPOSITORY):$(SYMBOLIC_TAG)
 	@echo build $(REPOSITORY):$(TAG)
 
 release: build
 	@[ -z "$$(git status -s)" ] || (echo "outstanding changes" ; git status -s && exit 1)
+	@[ -z "$(SYMBOLIC_TAG)" ] || (echo "No symbolic tag for this release" ; && exit 1)
 	docker push $(REPOSITORY):$(TAG)
+	docker push $(REPOSITORY):$(SYMBOLIC_TAG)
 	docker push $(REPOSITORY):latest
 
 target/consul-template: 
