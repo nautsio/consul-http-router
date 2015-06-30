@@ -1,6 +1,6 @@
 #!/bin/sh
 if [ -f /var/run/nginx.pid ] ; then
-	PID=$(</var/run/nginx.pid) 
+	read PID </var/run/nginx.pid
 fi
 
 if [ -n "$PID" -a -n "$(ps --no-headers $PID)" ] ; then
