@@ -1,9 +1,9 @@
 #!/bin/bash
 # NAME
-#	strip-image - strips the bare essentials from an image and exports them
+#	strip-docker-image - strips the bare essentials from an image and exports them
 #
 # SYNOPSIS
-#	strip-image -i image-name -t target-image-name -t [-p package | -f file] [-x] 
+#	strip-docker-image -i image-name -t target-image-name -t [-p package | -f file] [-x expose-port] [-v] 
 #			
 #
 # OPTIONS
@@ -11,17 +11,17 @@
 #	-t target-image-name	the image name of the stripped image
 #	-p package		package to include from image, multiple -p allowed.
 #	-f file			file to include from image, multiple -f allowed.
-#	-x			debug
+#	-x port			to expose.
+#	-v			verbose
 #
 # DESCRIPTION
-#   	this script copies all the files from an installed package and copies them
-#	to an export directory. Additional files can be added. When an executable
-#	is copied, all dynamic libraries required by the executed are included too.
+#   	creates a new Docker image based on the scratch  which contains
+#	only the the source image of selected packages and files.
 #
 # EXAMPLE
 #	The following example strips the nginx installation from the default NGiNX docker image,
 #
-#        create-stripped-image -i nginx -t stripped-nginx  \
+#        strip-docker-image -i nginx -t stripped-nginx  \
 #			-p nginx  \
 #			-f /etc/passwd \
 #			-f /etc/group \
@@ -32,20 +32,20 @@
 #			-f /bin/mkdir \
 #			-f /bin/ps \
 #			-f /var/run \
-#			-f /var/log/nginx \
+#			-f /var/log/nginx 
 #
 
 function usage() {
-	echo "usage: $(basename $0) -i image-name -t stripped-image-name [-p package] [-f file]" >&2
+	echo "usage: $(basename $0) -i image-name -t stripped-image-name [-p package | -f file] [-v]" >&2
 	echo "	$@" >&2
 }
 
 function parse_commandline() {
 
-	while getopts "xi:t:p:f:" OPT; do
+	while getopts "vi:t:p:f:x:" OPT; do
 	    case "$OPT" in
-		x)
-		    DEBUG=1
+		v)
+		    VERBOSE=-v
 		    ;;
 		p)
 		    PACKAGES="$PACKAGES -p $OPTARG"
@@ -58,6 +58,9 @@ function parse_commandline() {
 		    ;;
 		t)
 		    TARGET_IMAGE_NAME="$OPTARG"
+		    ;;
+		x)
+		    EXPOSE_PORTS="$EXPOSE_PORTS $OPTARG"
 		    ;;
 		*)
 		    usage
@@ -81,24 +84,27 @@ function parse_commandline() {
 		usage "Missing -p or -f options"
 		exit 1
 	fi
-	export PACKAGES FILES DEBUG
+	export PACKAGES FILES VERBOSE
 }
 
 parse_commandline "$@"
 
-DIR=create-stripped-image-$$
+DIR=strip-docker-image-$$
 mkdir -p $DIR/export
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-mkdir -p $DIR/fs
-docker run -v $PWD/$DIR/fs:/export \
+docker run -v $PWD/$DIR/export:/export \
 	  -v $SCRIPT_DIR:/mybin $IMAGE_NAME \
-	  /mybin/create-stripped-image-export.sh -d /export $DEBUG $PACKAGES $FILES
+	  /mybin/strip-docker-image-export -d /export $VERBOSE $PACKAGES $FILES
 
 cat > $DIR/Dockerfile <<!
 FROM scratch
 ADD export /
 !
+
+for PORT in $EXPOSE_PORTS ; do
+	echo EXPOSE $PORT >> $DIR/Dockerfile
+done
 
 (
 	cd $DIR

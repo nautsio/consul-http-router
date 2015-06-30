@@ -1,17 +1,17 @@
 #!/bin/bash
 
 # NAME
-#	strip-image - strips the bare essentials from an image and exports them
+#	strip-docker-image-export  - exports the bare essentials from a Docker image
 #
 # SYNOPSIS
-#	strip-image [-d export-dir ] [-p package | -f file] [-x] 
+#	strip-docker-image-export  [-d export-dir ] [-p package | -f file] [-v] 
 #			
 #
 # OPTIONS
 #	-d export-directory	to copy content to, defaults to /export.
 #	-p package		package to include from image, multiple -p allowed.
 #	-f file			file to include from image, multiple -f allowed.
-#	-x			debug
+#	-v			verbose
 #
 # DESCRIPTION
 #   	this script copies all the files from an installed package and copies them
@@ -37,20 +37,22 @@
 #			-f /var/run \
 #			-f /var/log/nginx \
 #			-d /export
-#
+# CAVEATS
+#	requires an image that has a bash, readlink and ldd  installed.
+# 
 export EXPORT_DIR=/export
 
 function usage() {
-	echo "usage: $(basename $0) [-d export-dir ] [-p package] [-f file]" >&2
+	echo "usage: $(basename $0) [-v] [-d export-dir ] [-p package | -f file]" >&2
 	echo "	$@" >&2
 }
 
 function parse_commandline() {
 
-	while getopts "xp:f:d:" OPT; do
+	while getopts "vp:f:d:" OPT; do
 	    case "$OPT" in
-		x)
-		    DEBUG=1
+		v)
+		    VERBOSE=v
 		    ;;
 		p)
 		    PACKAGES="$PACKAGES $OPTARG"
@@ -83,7 +85,7 @@ function print_file() {
 		if [ -e "$1" ] ; then
 			echo "$1"
 		else
-			test -n "$DEBUG" && echo "DEBUG: ignoring not existent file '$1'" >&2
+			test -n "$VERBOSE" && echo "INFO: ignoring not existent file '$1'" >&2
 		fi
 
 		if [ -s "$1" ] ; then
@@ -106,12 +108,12 @@ function list_dependencies() {
 				/usr/bin/ldd "$FILE" | \
 				awk '/statically/{next;} /=>/ { print $3; next; } { print $1 }' | \
 				while read LINE ; do
-					test -n "$DEBUG" && echo "DEBUG: including $LINE" >&2
+					test -n "$VERBOSE" && echo "INFO: including $LINE" >&2
 					print_file "$LINE"
 				done
 			fi
 		else
-			test -n "$DEBUG" && echo "DEBUG: ignoring not existent file $FILE" >&2
+			test -n "$VERBOSE" && echo "INFO: ignoring not existent file $FILE" >&2
 		fi
 	done
 }
@@ -140,5 +142,5 @@ tar czf - $(
 	list_dependencies $FILES
 	)  | sort -u
 
-) | ( cd $EXPORT_DIR ; tar -xzhvf - )
+) | ( cd $EXPORT_DIR ; tar -xzh${VERBOSE}f - )
 

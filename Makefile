@@ -2,7 +2,7 @@ REPOSITORY=mvanholsteijn/consul-http-router
 TAG=$$(git rev-parse --short HEAD)
 
 build: target/consul-template 
-	@bin/create-stripped-image.sh  -i nginx -t mvanholsteijn/stripped-nginx \
+	@bin/strip-docker-image  -i nginx -t mvanholsteijn/stripped-nginx \
 		-p nginx  \
 		-f /etc/passwd \
 		-f /etc/group \
@@ -13,7 +13,8 @@ build: target/consul-template
 		-f /bin/mkdir \
 		-f /bin/ps \
 		-f /var/run \
-		-f /var/log/nginx 
+		-f /var/log/nginx \
+		-f /var/cache/nginx
 	docker build --no-cache -t $(REPOSITORY):$(TAG) -f src/Dockerfile . 
 	docker tag  -f $(REPOSITORY):$(TAG) $(REPOSITORY):latest
 	@echo build $(REPOSITORY):$(TAG)
