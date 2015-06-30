@@ -23,7 +23,7 @@ build: target/consul-template
 
 release: build
 	@[ -z "$$(git status -s)" ] || (echo "outstanding changes" ; git status -s && exit 1)
-	@[ -z "$(SYMBOLIC_TAG)" ] || (echo "No symbolic tag for this release" ; && exit 1)
+	@[ -z "$(SYMBOLIC_TAG)" ] || (echo "No symbolic tag for this release" ; exit 1)
 	docker push $(REPOSITORY):$(TAG)
 	docker push $(REPOSITORY):$(SYMBOLIC_TAG)
 	docker push $(REPOSITORY):latest
