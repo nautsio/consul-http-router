@@ -1,4 +1,4 @@
-!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
   <head>
     <title>Welcome at the HTTP Router</title>
@@ -13,7 +13,7 @@
 
   <ul>
     {{range $index, $service := services}}{{range $tag, $services := service $service.Name | byTag}}{{if eq "http" $tag}}
-    <li>HTTP service <a href="javascript: document.write('http://{{$service.Name}}.' + window.location.host);">{{$service.Name}}</a>
+    <li>HTTP service <a href="javascript: 'http://{{$service.Name}}.' + window.location.host;">{{$service.Name}}</a>
     </li>
     {{end}}{{end}}{{end}}
   </ul>
