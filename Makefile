@@ -1,35 +1,38 @@
-NAME:=$(shell basename $(PWD))
+NAME=$(shell basename $(PWD))
 IMAGE=cargonauts/$(NAME)
-REVISION:=$(shell git rev-parse --short HEAD)
+BRANCH=$(shell git branch  | sed -n -e 's/^\* //p')
 
-.PHONY: pre-build docker-build post-build build release showrev
+VERSION=$(shell . .make-release-support ; getVersion)
 
-default: build
+build: 
+	docker build --no-cache --force-rm -t $(IMAGE):$(VERSION) .
+	docker tag  -f $(IMAGE):$(VERSION) $(IMAGE):latest
 
-showrev:
-	@echo $(REVISION)
+release: check-status check-release build
+	docker push $(IMAGE):$(VERSION)
+	docker push $(IMAGE):$(VERSION)
 
-showname:
-	@echo $(NAME)
+patch-release: VERSION = $(shell . .make-release-support; nextPatchLevel)
+patch-release: tag 
 
-pre-build:
+minor-release: VERSION = $(shell . .make-release-support; nextMinorLevel)
+minor-release: tag 
 
-post-build:
+major-release: VERSION = $(shell . .make-release-support; nextMajorLevel)
+major-release: tag 
 
-docker-build:
-	docker build --no-cache --force-rm -t $(IMAGE):$(REVISION) .
+tag: check-status
+	@. .make-release-support ; tagExists || (echo "ERROR: version $(VERSION) already tagged in git" >&2 && exit 1) ; 
+	@echo $(VERSION) > .release 
+	git add .release 
+	git commit -m "bumped to version $(VERSION)" ; 
+	git tag $(VERSION) ;
+	@test -z "$(shell git remote -v)" || git push origin $(BRANCH) --follow-tags 
 
-build: pre-build docker-build docker-tag post-build
+check-status:
+	@. .make-release-support ; ! hasChanges || (echo "ERROR: there are still outstanding changes" >&2 && exit 1) ; 
 
-no-outstanding-changes:
-	@[ -z "$$(git status -s .)" ] || (echo "outstanding changes" ; git status -s . && exit 1)
+check-release: 
+	@. .make-release-support ; tagExists || (echo "ERROR: version not yet tagged in git" >&2 && exit 1) ; 
+	@. .make-release-support ; ! differsFromRelease || (echo "ERROR: current directory differs from tagged $$(<.release). make [minor,major,patch]-release." ; exit 1) 
 
-docker-tag:
-	docker tag -f $(IMAGE):$(REVISION) $(IMAGE):latest
-	@echo $(IMAGE):$(REVISION)
-
-docker-push:
-	docker push $(IMAGE):$(REVISION)
-	docker push $(IMAGE):latest
-
-release: build no-outstanding-changes docker-push
