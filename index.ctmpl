@@ -13,7 +13,8 @@
 
   <ul>
     {{range $index, $service := services}}{{range $tag, $services := service $service.Name | byTag}}{{if eq "http" $tag}}
-    <li>HTTP service <a href="javascript: 'http://{{$service.Name}}.' + window.location.host;">{{$service.Name}}</a>
+    <li>HTTP service 
+    		<script>document.write("<a href=\"http://{{$service.Name}}." + window.location.host + "\">{{$service.Name}}</a>");</script>>
     </li>
     {{end}}{{end}}{{end}}
   </ul>
