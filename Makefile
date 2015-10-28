@@ -22,7 +22,7 @@ major-release: VERSION = $(shell . .make-release-support; nextMajorLevel)
 major-release: tag 
 
 tag: check-status
-	@. .make-release-support ; tagExists || (echo "ERROR: version $(VERSION) already tagged in git" >&2 && exit 1) ; 
+	@. .make-release-support ; ! tagExists || (echo "ERROR: version $(VERSION) already tagged in git" >&2 && exit 1) ; 
 	@echo $(VERSION) > .release 
 	git add .release 
 	git commit -m "bumped to version $(VERSION)" ; 
