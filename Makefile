@@ -27,7 +27,7 @@ tag: check-status
 	git add .release 
 	git commit -m "bumped to version $(VERSION)" ; 
 	git tag $(VERSION) ;
-	@test -z "$(shell git remote -v)" || git push origin $(BRANCH) --follow-tags 
+	@test -z "$(shell git remote -v)" || git push --tags
 
 check-status:
 	@. .make-release-support ; ! hasChanges || (echo "ERROR: there are still outstanding changes" >&2 && exit 1) ; 
