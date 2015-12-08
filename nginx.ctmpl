@@ -15,15 +15,20 @@ http {
 	listen 		80;
 	server_name 	{{$service.Name}}.*;
 	client_max_body_size 	0;
-	
+
+	set $forward_proto "http";
+        if ( $http_x_forwarded_proto != "" ) {
+                set $forward_proto $http_x_forwarded_proto;
+        }
+        
 	location / {
 	    proxy_pass 		http://{{$service.Name}};
 	    proxy_redirect	http://{{$service.Name}}/ /;
 	    proxy_set_header 	X-Forwarded-Host	$host;
 	    proxy_set_header 	X-Forwarded-For 	$proxy_add_x_forwarded_for;
 	    proxy_set_header 	Host 			$host;
-	    proxy_set_header 	X-Forwarded-Proto	$scheme;
 	    proxy_set_header 	X-Real-IP 		$remote_addr;
+	    proxy_set_header 	X-Forwarded-Proto  	$forward_proto;
 	}
     }
 {{end}}{{end}}{{end}}
