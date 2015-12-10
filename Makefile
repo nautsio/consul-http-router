@@ -26,13 +26,13 @@ release: check-status check-release build
 	docker push $(IMAGE):latest
 
 patch-release: VERSION = $(shell . .make-release-support; nextPatchLevel)
-patch-release: tag 
+patch-release: tag release
 
 minor-release: VERSION = $(shell . .make-release-support; nextMinorLevel)
-minor-release: tag 
+minor-release: tag release
 
 major-release: VERSION = $(shell . .make-release-support; nextMajorLevel)
-major-release: tag 
+major-release: tag release
 
 tag: TAG=$(shell . .make-release-support; getTag $(VERSION))
 tag: check-status
